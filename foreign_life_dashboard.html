@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foreign Life Insurance — Q3 2025 Dashboard | OSFI</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a3a5c;
+      --primary-light: #234f7d;
+      --accent: #c8102e;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header p { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
+    main { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+    .note {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 0.7rem 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.8rem;
+      color: #1e40af;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .note a { color: #1d4ed8; }
+    .chart-card {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+    .chart-card h2 { font-size: 1rem; font-weight: 600; color: var(--primary); }
+    .chart-card .chart-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; margin-bottom: 1rem; }
+    .chart-wrapper { position: relative; height: 420px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    thead { background: var(--primary); color: #fff; }
+    th { padding: 0.65rem 0.85rem; text-align: left; font-weight: 600; font-size: 0.78rem; white-space: nowrap; }
+    td { padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: #f8fafc; }
+    .val-cell { text-align: right; font-variant-numeric: tabular-nums; font-family: 'Courier New', monospace; }
+    .company-cell { font-weight: 500; max-width: 280px; }
+    footer { text-align: center; padding: 1rem; font-size: 0.75rem; color: var(--muted); }
+    footer a { color: var(--primary); }
+    #loading { padding: 2rem; text-align: center; }
+    #dashboard { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Foreign Life Insurance Companies — Q3 2025</h1>
+      <p>Top 20 by total assets • OSFI Open Government data</p>
+    </div>
+  </header>
+  <main>
+    <div id="loading">
+      <p>Loading data from OSFI Open Government Portal…</p>
+    </div>
+    <div id="dashboard">
+      <div class="note">
+        <strong>Data source:</strong> Same dataset as the
+        <a href="https://osfi.beyond2020.com/TableViewer/document.aspx?ReportId=4310" target="_blank">OSFI Beyond 20/20 Foreign Life report (ReportId=4310)</a>.
+        Data is fetched from the
+        <a href="https://open.canada.ca/data/en/dataset/1358284b-26e7-4c69-abd8-398d3da2c270" target="_blank">Open Government Canada Life Insurance dataset</a>
+        (LF1 + LCQ). Values in CAD $thousands. Ratios in %.
+      </div>
+
+      <div class="chart-card">
+        <h2>Top 20 Foreign Life Companies by Total Assets — Q3 2025</h2>
+        <p class="chart-sub">Horizontal bar chart. Assets in CAD $thousands.</p>
+        <div class="chart-wrapper">
+          <canvas id="chartAssets"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Total Insurance Contract Liabilities (Top 20)</h2>
+        <p class="chart-sub">Insurance contract liabilities (excl. seg. funds) + segregated funds net liabilities. CAD $thousands.</p>
+        <div class="chart-wrapper">
+          <canvas id="chartICL"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Core Ratio % and Total Ratio % (Top 20)</h2>
+        <p class="chart-sub">LICAT capital adequacy ratios. Minimum Core 55%, Total 90%.</p>
+        <div class="chart-wrapper">
+          <canvas id="chartRatios"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Data Table — Top 20 Foreign Life Companies, Q3 2025</h2>
+        <p class="chart-sub">Sorted by Total Assets descending. Click column headers to sort (if implemented).</p>
+        <div class="table-wrap">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Company</th>
+                <th class="val-cell">Total Assets</th>
+                <th class="val-cell">Total Ins. Contract Liab.</th>
+                <th class="val-cell">Total Liab. & Equity</th>
+                <th class="val-cell">Core Ratio %</th>
+                <th class="val-cell">Total Ratio %</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer>
+    Data: <a href="https://open.canada.ca/data/en/dataset/1358284b-26e7-4c69-abd8-398d3da2c270" target="_blank">OSFI Life Insurance Companies Quarterly — Open Canada</a>
+    &nbsp;|&nbsp; Report: <a href="https://osfi.beyond2020.com/TableViewer/document.aspx?ReportId=4310" target="_blank">Beyond 20/20 Foreign Life (4310)</a>
+    &nbsp;|&nbsp; Q3 2025
+  </footer>
+
+  <script>
+    const API = 'https://open.canada.ca/data/en/api/3/action/datastore_search';
+    const LF1_RESOURCE = 'f3ddcfbc-a852-4dee-be3c-5b08864c9afe';
+    const LCQ_RESOURCE = 'cc2cae60-cdc4-4428-b64c-cdaa2eb0b700';
+    const FILTER_BASE = encodeURIComponent(JSON.stringify({
+      'Industry Group': 'Foreign Life Companies',
+      'Fiscal Quarter': 'Q3 - 2025'
+    }));
+
+    const LF1_DPA = {
+      totalAssets: 'P2000299901',
+      totalLiabEquity: 'P2000499901',
+      insContractExclSeg: 'P2000415001',
+      insContractSegFunds: 'P2000416001'
+    };
+    const LCQ_DPA = { coreRatio: 'D1010010010', totalRatio: 'D1010010020' };
+
+    const AGGREGATE_ID = '1000009'; // Total Foreign Life Companies
+
+    function buildUrl(resource, extraFilters, limit) {
+      let q = `${API}?resource_id=${resource}&limit=${limit || 500}`;
+      const filters = { ...JSON.parse(decodeURIComponent(FILTER_BASE)), ...extraFilters };
+      q += '&filters=' + encodeURIComponent(JSON.stringify(filters));
+      return q;
+    }
+
+    async function fetchAll(url) {
+      const out = [];
+      let offset = 0;
+      const limit = 500;
+      while (true) {
+        const u = url + (url.includes('?') ? '&' : '?') + (offset ? `offset=${offset}` : '');
+        const res = await fetch(u);
+        const json = await res.json();
+        if (!json.success || !json.result.records.length) break;
+        out.push(...json.result.records);
+        if (json.result.records.length < limit) break;
+        offset += limit;
+      }
+      return out;
+    }
+
+    async function loadData() {
+      const [assets, liabEquity, icExcl, icSeg, lcqCore, lcqTotal] = await Promise.all([
+        fetch(buildUrl(LF1_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LF1_DPA.totalAssets }, 150)).then(r => r.json()),
+        fetch(buildUrl(LF1_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LF1_DPA.totalLiabEquity }, 150)).then(r => r.json()),
+        fetch(buildUrl(LF1_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LF1_DPA.insContractExclSeg }, 150)).then(r => r.json()),
+        fetch(buildUrl(LF1_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LF1_DPA.insContractSegFunds }, 150)).then(r => r.json()),
+        fetch(buildUrl(LCQ_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LCQ_DPA.coreRatio }, 150)).then(r => r.json()),
+        fetch(buildUrl(LCQ_RESOURCE, { 'Data Point Address/Adresse de point de donnee': LCQ_DPA.totalRatio }, 150)).then(r => r.json())
+      ]);
+
+      const byCompany = {};
+      function add(id, company, k, v) {
+        if (id === AGGREGATE_ID) return;
+        if (!byCompany[id]) byCompany[id] = { id, company, totalAssets: 0, totalLiabEquity: 0, insContractLiab: 0, coreRatio: null, totalRatio: null };
+        if (k === 'totalAssets') byCompany[id].totalAssets = v;
+        else if (k === 'totalLiabEquity') byCompany[id].totalLiabEquity = v;
+        else if (k === 'insContractLiab') byCompany[id].insContractLiab = (byCompany[id].insContractLiab || 0) + v;
+        else if (k === 'coreRatio') byCompany[id].coreRatio = v;
+        else if (k === 'totalRatio') byCompany[id].totalRatio = v;
+      }
+
+      assets.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'totalAssets', parseFloat(r['Measure Value/Valeur de mesure']) || 0));
+      liabEquity.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'totalLiabEquity', parseFloat(r['Measure Value/Valeur de mesure']) || 0));
+      icExcl.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'insContractLiab', parseFloat(r['Measure Value/Valeur de mesure']) || 0));
+      icSeg.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'insContractLiab', parseFloat(r['Measure Value/Valeur de mesure']) || 0));
+      lcqCore.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'coreRatio', parseFloat(r['Measure Value/Valeur de mesure']) != null ? parseFloat(r['Measure Value/Valeur de mesure']) : null));
+      lcqTotal.result?.records?.forEach(r => add(r.Id, r['Total Life Insurance Companies/FIs'], 'totalRatio', parseFloat(r['Measure Value/Valeur de mesure']) != null ? parseFloat(r['Measure Value/Valeur de mesure']) : null));
+
+      const arr = Object.values(byCompany).filter(c => c.totalAssets > 0);
+      arr.sort((a, b) => b.totalAssets - a.totalAssets);
+      return arr.slice(0, 20);
+    }
+
+    function fmtK(n) {
+      if (n == null || isNaN(n)) return '—';
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return Number(n).toLocaleString();
+    }
+    function fmtNum(n, decimals) {
+      if (n == null || isNaN(n)) return '—';
+      return Number(n).toFixed(decimals != null ? decimals : 0);
+    }
+    function shortName(s) {
+      if (!s) return '';
+      if (s.length <= 32) return s;
+      return s.slice(0, 29) + '…';
+    }
+
+    const COLORS = ['#1a3a5c','#234f7d','#2d6ab0','#3b82f6','#60a5fa','#0d9488','#059669','#10b981','#c8102e','#dc2626','#b91c1c','#7c2d12','#9a3412','#ea580c','#d97706','#ca8a04','#65a30d','#4d7c0f','#15803d','#166534'];
+
+    let top20 = [];
+
+    async function init() {
+      try {
+        top20 = await loadData();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+
+        buildChartAssets();
+        buildChartICL();
+        buildChartRatios();
+        buildTable();
+      } catch (err) {
+        document.getElementById('loading').innerHTML = `<p style="color:#c8102e;font-weight:600">Failed to load data: ${err.message}</p><p style="margin-top:.75rem;font-size:.8rem">Serve via a local web server (e.g. python -m http.server) and ensure you have internet access.</p>`;
+      }
+    }
+
+    function buildChartAssets() {
+      const ctx = document.getElementById('chartAssets').getContext('2d');
+      const labels = top20.map(c => shortName(c.company)).reverse();
+      const data = top20.map(c => c.totalAssets).reverse();
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Total Assets ($K)',
+            data,
+            backgroundColor: COLORS[0] + 'cc',
+            borderColor: COLORS[0],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' Total Assets: $' + fmtK(ctx.raw) + ' (CAD thousands)'
+              }
+            }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { callback: v => '$' + fmtK(v) } },
+            y: { ticks: { font: { size: 10 }, maxRotation: 0 } }
+          }
+        }
+      });
+    }
+
+    function buildChartICL() {
+      const ctx = document.getElementById('chartICL').getContext('2d');
+      const labels = top20.map(c => shortName(c.company)).reverse();
+      const data = top20.map(c => c.insContractLiab || 0).reverse();
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Insurance Contract Liabilities ($K)',
+            data,
+            backgroundColor: COLORS[2] + 'cc',
+            borderColor: COLORS[2],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' Ins. Contract Liab.: $' + fmtK(ctx.raw) + ' (CAD thousands)'
+              }
+            }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { callback: v => '$' + fmtK(v) } },
+            y: { ticks: { font: { size: 10 }, maxRotation: 0 } }
+          }
+        }
+      });
+    }
+
+    function buildChartRatios() {
+      const ctx = document.getElementById('chartRatios').getContext('2d');
+      const labels = top20.map(c => shortName(c.company)).reverse();
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Core Ratio %',
+              data: top20.map(c => c.coreRatio).reverse(),
+              backgroundColor: COLORS[0] + 'aa',
+              borderColor: COLORS[0],
+              borderWidth: 1,
+              order: 2
+            },
+            {
+              label: 'Total Ratio %',
+              data: top20.map(c => c.totalRatio).reverse(),
+              backgroundColor: COLORS[4] + 'aa',
+              borderColor: COLORS[4],
+              borderWidth: 1,
+              order: 1
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ${ctx.raw != null ? ctx.raw.toFixed(2) + '%' : '—'}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: (() => {
+              const vals = top20.flatMap(c => [c.coreRatio, c.totalRatio]).filter(v => v != null && Number.isFinite(v));
+              return Math.max(150, (vals.length ? Math.max(...vals) : 0) * 1.1);
+            })(),
+              ticks: { callback: v => v + '%' }
+            },
+            y: { ticks: { font: { size: 10 }, maxRotation: 0 } }
+          }
+        }
+      });
+    }
+
+    function buildTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = top20.map((c, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td class="company-cell">${c.company}</td>
+          <td class="val-cell">${fmtK(c.totalAssets)}</td>
+          <td class="val-cell">${fmtK(c.insContractLiab)}</td>
+          <td class="val-cell">${fmtK(c.totalLiabEquity)}</td>
+          <td class="val-cell">${c.coreRatio != null ? fmtNum(c.coreRatio, 2) + '%' : '—'}</td>
+          <td class="val-cell">${c.totalRatio != null ? fmtNum(c.totalRatio, 2) + '%' : '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>
