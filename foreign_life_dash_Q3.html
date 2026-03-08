@@ -87,7 +87,7 @@
 
       <div class="chart-card">
         <h2>Top 20 Foreign Life Companies by Total Assets — Q3 2025</h2>
-        <p class="chart-sub">Horizontal bar chart. Values in CAD $ (source data in $thousands).</p>
+        <p class="chart-sub">Horizontal bar chart. Assets in CAD $thousands.</p>
         <div class="chart-wrapper">
           <canvas id="chartAssets"></canvas>
         </div>
@@ -138,7 +138,6 @@
 
   <script>
     const API = 'https://open.canada.ca/data/en/api/3/action/datastore_search';
-    const PROXY = 'https://corsproxy.io/?url=';
     const LF1_RESOURCE = 'f3ddcfbc-a852-4dee-be3c-5b08864c9afe';
     const LCQ_RESOURCE = 'cc2cae60-cdc4-4428-b64c-cdaa2eb0b700';
     const FILTER_BASE = encodeURIComponent(JSON.stringify({
@@ -163,7 +162,7 @@
       let q = `${API}?resource_id=${resource}&limit=${limit || 500}`;
       const filters = { ...JSON.parse(decodeURIComponent(FILTER_BASE)), ...extraFilters };
       q += '&filters=' + encodeURIComponent(JSON.stringify(filters));
-      return PROXY + encodeURIComponent(q);
+      return q;
     }
 
     async function fetchAll(url) {
@@ -218,9 +217,9 @@
 
     function fmtK(n) {
       if (n == null || isNaN(n)) return '—';
-      if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'B';
-      if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'M';
-      return '$' + Number(n).toLocaleString() + 'K';
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return Number(n).toLocaleString();
     }
     function fmtNum(n, decimals) {
       if (n == null || isNaN(n)) return '—';
@@ -276,12 +275,12 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: ctx => ' Total Assets: ' + fmtK(ctx.raw)
+                label: ctx => ' Total Assets: $' + fmtK(ctx.raw) + ' (CAD thousands)'
               }
             }
           },
           scales: {
-            x: { beginAtZero: true, ticks: { callback: v => fmtK(v) } },
+            x: { beginAtZero: true, ticks: { callback: v => '$' + fmtK(v) } },
             y: { ticks: { font: { size: 10 }, maxRotation: 0 } }
           }
         }
@@ -312,12 +311,12 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: ctx => ' Ins. Contract Liab.: ' + fmtK(ctx.raw)
+                label: ctx => ' Ins. Contract Liab.: $' + fmtK(ctx.raw) + ' (CAD thousands)'
               }
             }
           },
           scales: {
-            x: { beginAtZero: true, ticks: { callback: v => fmtK(v) } },
+            x: { beginAtZero: true, ticks: { callback: v => '$' + fmtK(v) } },
             y: { ticks: { font: { size: 10 }, maxRotation: 0 } }
           }
         }
