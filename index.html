@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Value Builder Assessment | Business Doctors UK</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2744;
+    --navy-light: #243560;
+    --orange: #e8813a;
+    --orange-light: #f0a060;
+    --green: #27ae60;
+    --amber: #f39c12;
+    --red: #c0392b;
+    --grey-bg: #f4f6fa;
+    --grey-border: #dde2ec;
+    --grey-text: #6b7280;
+    --white: #ffffff;
+    --shadow: 0 2px 12px rgba(26,39,68,0.10);
+  }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--grey-bg); color: #1a2744; min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { background: var(--navy); color: var(--white); padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+  .topbar .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; }
+  .topbar .logo span { color: var(--orange); }
+  .topbar .subtitle { font-size: 0.85rem; color: #a0aec0; margin-left: auto; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--white); border-bottom: 1px solid var(--grey-border); padding: 0 32px; }
+  .progress-steps { display: flex; gap: 0; overflow-x: auto; }
+  .step-pill { flex: 1; min-width: 80px; text-align: center; padding: 10px 4px 8px; font-size: 0.7rem; color: #a0aec0; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .step-pill.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 600; }
+  .step-pill.done { color: var(--green); border-bottom-color: var(--green); }
+  .step-pill.locked { opacity: 0.35; cursor: default; }
+  .step-pill .step-num { display: block; font-size: 0.85rem; font-weight: 700; }
+
+  /* MAIN CONTAINER */
+  .main { max-width: 820px; margin: 32px auto; padding: 0 16px 60px; }
+  .card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 36px 40px; margin-bottom: 24px; }
+
+  /* WELCOME */
+  .welcome-hero { text-align: center; padding: 8px 0 24px; }
+  .welcome-hero h1 { font-size: 2rem; color: var(--navy); margin-bottom: 8px; }
+  .welcome-hero p { color: var(--grey-text); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+  .welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  .driver-preview { background: var(--grey-bg); border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; }
+  .driver-preview strong { color: var(--navy); display: block; margin-bottom: 2px; }
+
+  /* FORM FIELDS */
+  label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--grey-border); border-radius: 8px;
+    font-size: 0.95rem; color: var(--navy); background: var(--white); transition: border 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,129,58,0.12); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { margin-bottom: 18px; }
+  .form-hint { font-size: 0.78rem; color: var(--grey-text); margin-top: 4px; }
+
+  /* DRIVER SECTION */
+  .driver-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+  .driver-badge { background: var(--navy); color: var(--white); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; flex-shrink: 0; }
+  .driver-title h2 { font-size: 1.4rem; color: var(--navy); }
+  .driver-title p { color: var(--grey-text); font-size: 0.92rem; margin-top: 4px; }
+
+  /* RADIO QUESTIONS */
+  .question-block { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--grey-border); }
+  .question-block:last-child { border-bottom: none; }
+  .question-text { font-size: 1rem; font-weight: 600; color: var(--navy); margin-bottom: 14px; line-height: 1.5; }
+  .question-num { color: var(--orange); font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+  .radio-group { display: flex; flex-direction: column; gap: 10px; }
+  .radio-option { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border: 1.5px solid var(--grey-border); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .radio-option:hover { border-color: var(--orange-light); background: #fff8f3; }
+  .radio-option.selected { border-color: var(--orange); background: #fff5ee; }
+  .radio-option input[type=radio] { margin-top: 2px; accent-color: var(--orange); flex-shrink: 0; }
+  .radio-option-label { font-size: 0.9rem; color: #374151; line-height: 1.4; }
+  .radio-option.selected .radio-option-label { color: var(--navy); font-weight: 500; }
+
+  /* FINANCIAL PROFORMA */
+  .section-title { font-size: 1.1rem; font-weight: 700; color: var(--navy); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--orange); }
+  .fin-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .fin-row label { flex: 1; margin: 0; font-size: 0.875rem; font-weight: 500; }
+  .fin-row .fin-input { width: 180px; flex-shrink: 0; }
+  .fin-row .fin-sign { width: 24px; text-align: center; font-weight: 700; color: var(--orange); flex-shrink: 0; }
+  .fin-total { background: var(--navy); color: var(--white); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-top: 8px; }
+  .fin-subtotal { background: var(--grey-bg); border-radius: 6px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: var(--navy); margin: 8px 0; }
+  .addback-item { background: #f0faf4; border: 1px solid #b7e4c7; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .addback-item label { color: #1a6b3a; }
+  .addback-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* NAVIGATION BUTTONS */
+  .nav-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; }
+  .btn { padding: 12px 28px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--orange); color: var(--white); }
+  .btn-primary:hover { background: #d4702a; }
+  .btn-secondary { background: var(--white); color: var(--navy); border: 1.5px solid var(--grey-border); }
+  .btn-secondary:hover { border-color: var(--navy); }
+  .btn-large { padding: 14px 36px; font-size: 1rem; }
+  .btn-print { background: var(--navy); color: var(--white); }
+  .btn-print:hover { background: var(--navy-light); }
+  .required-note { font-size: 0.78rem; color: var(--grey-text); }
+  .error-msg { color: var(--red); font-size: 0.82rem; margin-top: 6px; display: none; }
+  .error-msg.show { display: block; }
+
+  /* REPORT */
+  .report-header { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: var(--white); border-radius: 12px; padding: 32px 40px; margin-bottom: 24px; }
+  .report-header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+  .report-header .company-name { color: var(--orange-light); font-size: 1.1rem; margin-bottom: 16px; }
+  .report-meta { display: flex; gap: 32px; flex-wrap: wrap; }
+  .report-meta-item { font-size: 0.85rem; color: #a0aec0; }
+  .report-meta-item span { color: var(--white); font-weight: 600; display: block; }
+
+  .overall-score-card { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
+  .overall-gauge-wrap { flex: 0 0 260px; }
+  .overall-score-details { flex: 1; min-width: 200px; }
+  .score-big { font-size: 4rem; font-weight: 800; color: var(--navy); line-height: 1; }
+  .score-label { color: var(--grey-text); font-size: 0.9rem; margin-top: 4px; }
+  .score-band { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; margin-top: 12px; }
+  .band-red { background: #fde8e8; color: var(--red); }
+  .band-amber { background: #fef3cd; color: #92600a; }
+  .band-green { background: #d4edda; color: #1a6b3a; }
+
+  .drivers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .driver-score-card { background: var(--white); border-radius: 10px; box-shadow: var(--shadow); padding: 20px; }
+  .driver-score-card h3 { font-size: 0.95rem; color: var(--navy); margin-bottom: 12px; }
+  .driver-gauge-wrap { height: 140px; position: relative; }
+  .driver-score-num { text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--navy); margin-top: -8px; }
+  .driver-avg-label { text-align: center; font-size: 0.75rem; color: var(--grey-text); }
+
+  .score-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .score-table th { background: var(--navy); color: var(--white); padding: 10px 14px; text-align: left; font-weight: 600; }
+  .score-table td { padding: 10px 14px; border-bottom: 1px solid var(--grey-border); vertical-align: middle; }
+  .score-table tr:nth-child(even) td { background: var(--grey-bg); }
+  .score-bar-wrap { width: 120px; height: 8px; background: #e5e7eb; border-radius: 4px; display: inline-block; vertical-align: middle; }
+  .score-bar { height: 8px; border-radius: 4px; }
+  .score-vs { font-size: 0.78rem; color: var(--grey-text); }
+  .tag-above { color: var(--green); font-weight: 600; }
+  .tag-below { color: var(--red); font-weight: 600; }
+
+  .valuation-card { background: linear-gradient(135deg, #1a4a2a, #27ae60); color: var(--white); border-radius: 12px; padding: 28px 36px; }
+  .valuation-card h2 { font-size: 1.3rem; margin-bottom: 20px; opacity: 0.9; }
+  .valuation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .val-item { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 14px; }
+  .val-item .val-label { font-size: 0.75rem; opacity: 0.8; margin-bottom: 4px; }
+  .val-item .val-num { font-size: 1.6rem; font-weight: 800; }
+  .val-item .val-sub { font-size: 0.75rem; opacity: 0.7; }
+
+  .recommendations { margin-top: 4px; }
+  .rec-item { border-left: 4px solid var(--orange); padding: 12px 16px; margin-bottom: 12px; background: #fff8f3; border-radius: 0 8px 8px 0; }
+  .rec-item .rec-driver { font-weight: 700; color: var(--navy); font-size: 0.85rem; }
+  .rec-item .rec-text { font-size: 0.875rem; color: #374151; margin-top: 4px; line-height: 1.5; }
+
+  @media print {
+    .topbar, .progress-wrap, .nav-buttons, .btn-print, .btn-secondary { display: none !important; }
+    .main { margin: 0; padding: 0; max-width: 100%; }
+    .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    .drivers-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    .form-grid, .welcome-grid, .addback-row { grid-template-columns: 1fr; }
+    .overall-score-card { flex-direction: column; }
+    .fin-row { flex-direction: column; align-items: flex-start; }
+    .fin-row .fin-input { width: 100%; }
+  }
+
+  .hidden { display: none !important; }
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SAVE/LOAD BAR */
+  .savebar { background: var(--navy-light); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 6px 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .savebar .save-label { font-size: 0.78rem; color: #a0aec0; }
+  .savebar .save-status { font-size: 0.78rem; color: #6ee7b7; }
+  .btn-save { padding: 5px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #e2e8f0; cursor: pointer; transition: all 0.15s; }
+  .btn-save:hover { background: rgba(255,255,255,0.16); }
+  .btn-save.danger { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+  .btn-save.danger:hover { background: rgba(239,68,68,0.15); }
+  .restore-banner { background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .restore-banner .rb-icon { font-size: 1.5rem; }
+  .restore-banner .rb-text { flex: 1; font-size: 0.9rem; color: #92600a; }
+  .restore-banner .rb-text strong { display: block; color: #78350f; margin-bottom: 2px; }
+  .restore-banner .rb-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  @media print { .savebar { display: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Business <span>Doctors</span> UK</div>
+  <div class="subtitle">Value Builder Assessment Tool</div>
+</div>
+
+<div class="savebar">
+  <span class="save-label">Progress:</span>
+  <span class="save-status" id="saveStatus">Not saved yet</span>
+  <button class="btn-save" onclick="exportToFile()" title="Download your answers as a JSON file you can reload later">&#8659; Save to File</button>
+  <label class="btn-save" style="cursor:pointer" title="Load previously saved answers from a JSON file">
+    &#8657; Load from File
+    <input type="file" accept=".json" onchange="importFromFile(event)" style="display:none">
+  </label>
+  <button class="btn-save danger" onclick="clearSaved()" title="Clear all saved data and start fresh">&#10005; Clear Saved Data</button>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps"></div>
+</div>
+
+<div class="main" id="mainContent"></div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+
+const INDUSTRY_AVERAGES = {
+  overall: 57,
+  financial: 48,
+  growth: 65,
+  switzerland: 67,
+  teeter: 50,
+  recurring: 35,
+  monopoly: 52,
+  customer: 77,
+  hub: 60
+};
+
+// Multiple range [min, max] per industry sector
+const INDUSTRY_MULTIPLES = {
+  'Technology / Software / SaaS':           { min: 4.0, max: 10.0 },
+  'Professional Services (Consulting/Legal/Accountancy)': { min: 3.0, max: 7.0 },
+  'Healthcare / Medical / Dental':          { min: 3.0, max: 8.0 },
+  'Financial Services':                     { min: 3.0, max: 7.0 },
+  'Manufacturing':                          { min: 2.5, max: 5.5 },
+  'Construction / Engineering':             { min: 2.0, max: 5.0 },
+  'Wholesale / Distribution':               { min: 2.0, max: 4.5 },
+  'Retail / E-commerce':                    { min: 1.5, max: 4.0 },
+  'Food & Beverage / Hospitality':          { min: 2.0, max: 5.0 },
+  'Media / Marketing / PR':                 { min: 2.5, max: 6.0 },
+  'Education / Training':                   { min: 2.5, max: 6.0 },
+  'Recruitment / HR Services':              { min: 3.0, max: 6.0 },
+  'Logistics / Transport':                  { min: 2.0, max: 4.5 },
+  'Property / Real Estate Services':        { min: 2.5, max: 5.0 },
+  'Other / Mixed':                          { min: 2.0, max: 5.0 }
+};
+
+const SCORE_BANDS = [
+  { min: 0,  max: 40, label: 'Needs Work',       cls: 'band-red'   },
+  { min: 40, max: 70, label: 'Building Value',    cls: 'band-amber' },
+  { min: 70, max: 101,label: 'Value Builder',     cls: 'band-green' }
+];
+
+// ─── DRIVER DEFINITIONS ──────────────────────────────────────────────────────
+
+const DRIVERS = [
+  {
+    id: 'financial', num: 1,
+    name: 'Financial Performance',
+    avgKey: 'financial',
+    description: 'A buyer will scrutinise your historical financial results. Strong, consistent growth and healthy margins signal a low-risk business worth paying a premium for.',
+    improvements: [
+      'Focus on reducing operating costs and improving profit margins',
+      'Establish clear monthly management accounts to track profitability by product/service line',
+      'Benchmark your financial performance against industry peers to identify improvement levers',
+      'Build a 3-year forward-looking financial model to demonstrate future potential'
+    ],
+    questions: [
+      {
+        id: 'fin1',
+        text: 'How would you describe your company\'s revenue trend over the last 3 years?',
+        options: [
+          { label: 'Declining significantly year-on-year', score: 0 },
+          { label: 'Flat or declining slightly', score: 25 },
+          { label: 'Growing moderately (5–10% p.a.)', score: 50 },
+          { label: 'Growing strongly (10–25% p.a.)', score: 75 },
+          { label: 'Growing exceptionally (>25% p.a.)', score: 100 }
+        ]
+      },
+      {
+        id: 'fin2',
+        text: 'What is your approximate EBITDA margin (earnings before interest, tax, depreciation and amortisation as a % of revenue)?',
+        options: [
+          { label: 'Less than 5%', score: 0 },
+          { label: '5–10%', score: 25 },
+          { label: '10–15%', score: 50 },
+          { label: '15–25%', score: 75 },
+          { label: 'Greater than 25%', score: 100 }
+        ]
+      },
+      {
+        id: 'fin3',
+        text: 'How consistent and predictable is your revenue year-over-year?',
+        options: [
+          { label: 'Very inconsistent — large swings each year', score: 0 },
+          { label: 'Somewhat variable', score: 25 },
+          { label: 'Mostly consistent with occasional variation', score: 50 },
+          { label: 'Very consistent and largely predictable', score: 75 },
+          { label: 'Highly predictable — we can forecast accurately 12+ months ahead', score: 100 }
+        ]
+      },
+      {
+        id: 'fin4',
+        text: 'How does your profitability compare to your industry peers?',
+        options: [
+          { label: 'Significantly below industry average', score: 0 },
+          { label: 'Slightly below average', score: 25 },
+          { label: 'In line with industry average', score: 50 },
+          { label: 'Above average', score: 75 },
+          { label: 'Top quartile in our sector', score: 100 }
+        ]
+      },
+      {
+        id: 'fin5',
+        text: 'How robust is the free cash flow generated by the business (after capital expenditure)?',
+        options: [
+          { label: 'Negative — the business consumes cash', score: 0 },
+          { label: 'Roughly break-even', score: 25 },
+          { label: 'Modest positive cash generation', score: 50 },
+          { label: 'Strong positive cash flow', score: 75 },
+          { label: 'Exceptional cash generation relative to profit', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'growth', num: 2,
+    name: 'Growth Potential',
+    avgKey: 'growth',
+    description: 'Buyers pay for future earnings, not just past performance. A credible growth story backed by a large addressable market commands a higher valuation.',
+    improvements: [
+      'Map your total addressable market to identify growth opportunities',
+      'Create a written growth strategy with specific milestones and KPIs',
+      'Identify and dedicate resources to 2-3 key growth initiatives',
+      'Strengthen your sales and marketing infrastructure to support expansion'
+    ],
+    questions: [
+      {
+        id: 'gro1',
+        text: 'How scalable is your business model — can revenue grow significantly without a proportional increase in costs?',
+        options: [
+          { label: 'Not at all scalable — costs grow in line with revenue', score: 0 },
+          { label: 'Slightly scalable', score: 25 },
+          { label: 'Moderately scalable', score: 50 },
+          { label: 'Highly scalable', score: 75 },
+          { label: 'Extremely scalable — near-zero marginal cost of growth', score: 100 }
+        ]
+      },
+      {
+        id: 'gro2',
+        text: 'What is the size of your total addressable market (TAM)?',
+        options: [
+          { label: 'Very small or highly niche — limited headroom', score: 0 },
+          { label: 'Limited — we already have significant market share', score: 25 },
+          { label: 'Moderate — meaningful room to grow', score: 50 },
+          { label: 'Large — we serve only a small fraction of potential customers', score: 75 },
+          { label: 'Huge / global — substantial untapped opportunity', score: 100 }
+        ]
+      },
+      {
+        id: 'gro3',
+        text: 'Do you have a documented, actionable growth strategy?',
+        options: [
+          { label: 'No growth plan exists', score: 0 },
+          { label: 'Informal ideas — nothing written down', score: 25 },
+          { label: 'Basic written plan with broad goals', score: 50 },
+          { label: 'Detailed strategy with milestones and owners', score: 75 },
+          { label: 'Fully documented growth playbook with KPIs and budget', score: 100 }
+        ]
+      },
+      {
+        id: 'gro4',
+        text: 'Have you successfully launched new products, services, or entered new markets in the last 2 years?',
+        options: [
+          { label: 'No — we offer the same things as 3+ years ago', score: 0 },
+          { label: 'Considering it but nothing launched yet', score: 25 },
+          { label: 'One attempt with mixed results', score: 50 },
+          { label: 'Successfully launched one new product/market', score: 75 },
+          { label: 'Multiple successful launches — innovation is a strength', score: 100 }
+        ]
+      },
+      {
+        id: 'gro5',
+        text: 'How strong is your sales and marketing infrastructure to support growth?',
+        options: [
+          { label: 'No dedicated sales or marketing function', score: 0 },
+          { label: 'Ad hoc marketing with no clear process', score: 25 },
+          { label: 'Basic sales process and occasional marketing', score: 50 },
+          { label: 'Dedicated team with clear pipeline and CRM', score: 75 },
+          { label: 'Sophisticated, data-driven sales and marketing engine', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'switzerland', num: 3,
+    name: 'Switzerland Structure',
+    avgKey: 'switzerland',
+    description: 'Like Switzerland, your business should be independent and neutral — not over-reliant on any single customer, supplier, or employee. Concentration risk reduces value.',
+    improvements: [
+      'Actively reduce reliance on your top customer by diversifying your client base',
+      'Diversify your supplier base to avoid dependency on single providers',
+      'Cross-train staff to remove single-employee dependency risks',
+      'Set targets to keep no customer above 15-20% of revenue'
+    ],
+    questions: [
+      {
+        id: 'swi1',
+        text: 'What percentage of total revenue comes from your single largest customer?',
+        options: [
+          { label: 'More than 30%', score: 0 },
+          { label: '20–30%', score: 25 },
+          { label: '10–20%', score: 50 },
+          { label: '5–10%', score: 75 },
+          { label: 'Less than 5%', score: 100 }
+        ]
+      },
+      {
+        id: 'swi2',
+        text: 'How dependent is the business on a single key supplier or vendor?',
+        options: [
+          { label: 'One supplier controls >50% of our supply chain', score: 0 },
+          { label: 'Significant dependency on one supplier (30–50%)', score: 25 },
+          { label: 'Some dependency but alternatives exist', score: 50 },
+          { label: 'Multiple suppliers — no single point of failure', score: 75 },
+          { label: 'Fully diversified supply chain with no key dependency', score: 100 }
+        ]
+      },
+      {
+        id: 'swi3',
+        text: 'How dependent is the business on one key employee (other than the owner)?',
+        options: [
+          { label: 'Business would fail without this person', score: 0 },
+          { label: 'Major disruption — very hard to replace', score: 25 },
+          { label: 'Significant but manageable disruption', score: 50 },
+          { label: 'Minor disruption — replaceable within a few months', score: 75 },
+          { label: 'No single employee is irreplaceable', score: 100 }
+        ]
+      },
+      {
+        id: 'swi4',
+        text: 'How diversified is your revenue across different products, services, or income streams?',
+        options: [
+          { label: 'Single product or service — all eggs in one basket', score: 0 },
+          { label: '2–3 products with one dominant', score: 25 },
+          { label: 'Reasonable mix across 3–5 products/services', score: 50 },
+          { label: 'Well-diversified portfolio', score: 75 },
+          { label: 'Highly diversified with strong recurring streams', score: 100 }
+        ]
+      },
+      {
+        id: 'swi5',
+        text: 'Is the business reliant on proprietary technology or systems controlled by a single external vendor?',
+        options: [
+          { label: 'Fully reliant on one vendor — very high lock-in risk', score: 0 },
+          { label: 'Heavily dependent on one vendor', score: 25 },
+          { label: 'Some dependency but workarounds exist', score: 50 },
+          { label: 'Mix of proprietary and vendor solutions', score: 75 },
+          { label: 'Own our tech or use interchangeable platforms', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'teeter', num: 4,
+    name: 'The Valuation Teeter-Totter',
+    avgKey: 'teeter',
+    description: 'When you are desperate to sell, buyers sense it and pay less. When you don\'t need to sell, you negotiate from a position of strength. Build push vs pull balance.',
+    improvements: [
+      'Eliminate personal urgency to sell by building financial security',
+      'Systematically document all business processes and systems',
+      'Build a management team that can run the business without you',
+      'Ensure cash flow is visibly independent of your personal involvement'
+    ],
+    questions: [
+      {
+        id: 'tee1',
+        text: 'How urgent is your personal need to sell or exit the business in the next 1–2 years?',
+        options: [
+          { label: 'Extremely urgent — I must sell soon', score: 0 },
+          { label: 'Somewhat urgent — I would like to exit soon', score: 25 },
+          { label: 'Neutral — no specific timeline pressure', score: 50 },
+          { label: 'Not urgent — I would sell for the right price', score: 75 },
+          { label: 'No urgency at all — the business runs without me needing to exit', score: 100 }
+        ]
+      },
+      {
+        id: 'tee2',
+        text: 'How well documented are your business processes, systems, and standard operating procedures?',
+        options: [
+          { label: 'Nothing documented — it all lives in people\'s heads', score: 0 },
+          { label: 'Partially documented — key gaps exist', score: 25 },
+          { label: 'Most processes documented but not consistently followed', score: 50 },
+          { label: 'Well documented and regularly followed', score: 75 },
+          { label: 'Fully documented, updated, and includes training materials', score: 100 }
+        ]
+      },
+      {
+        id: 'tee3',
+        text: 'How strong is the likely buyer interest or strategic appeal of your business?',
+        options: [
+          { label: 'Very limited — few buyers would be interested', score: 0 },
+          { label: 'Some interest but limited pool', score: 25 },
+          { label: 'Moderate — a handful of likely acquirers', score: 50 },
+          { label: 'High — several strategic buyers identified', score: 75 },
+          { label: 'Exceptional — multiple motivated strategic buyers would compete', score: 100 }
+        ]
+      },
+      {
+        id: 'tee4',
+        text: 'Does your business generate strong free cash flow without requiring day-to-day owner involvement?',
+        options: [
+          { label: 'No — cash generation depends heavily on the owner', score: 0 },
+          { label: 'Minimal independent cash generation', score: 25 },
+          { label: 'Moderate — some owner independence', score: 50 },
+          { label: 'Strong independent cash flow', score: 75 },
+          { label: 'Excellent — the business generates cash with zero owner input', score: 100 }
+        ]
+      },
+      {
+        id: 'tee5',
+        text: 'Could the business be sold and continue operating successfully without you being present post-completion?',
+        options: [
+          { label: 'No — I am the business; without me it collapses', score: 0 },
+          { label: 'Very difficult without a long transition period', score: 25 },
+          { label: 'Possible with significant effort and transition support', score: 50 },
+          { label: 'Yes — key staff could manage with modest handover', score: 75 },
+          { label: 'Absolutely — the business is fully independent of me', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'recurring', num: 5,
+    name: 'Recurring Revenue',
+    avgKey: 'recurring',
+    description: 'Predictable, recurring revenue makes a business far more attractive to buyers. Subscriptions, retainers, and long-term contracts dramatically increase value.',
+    improvements: [
+      'Convert project-based relationships to retainer or service contracts',
+      'Introduce auto-renewal clauses in existing contracts',
+      'Systematically convert top clients to annual contracts',
+      'Track and reduce customer churn as a key performance indicator'
+    ],
+    questions: [
+      {
+        id: 'rec1',
+        text: 'What percentage of your annual revenue is recurring (subscriptions, retainers, service contracts, automatic renewals)?',
+        options: [
+          { label: 'Less than 10% — almost entirely project/transaction-based', score: 0 },
+          { label: '10–25%', score: 25 },
+          { label: '25–50%', score: 50 },
+          { label: '50–75%', score: 75 },
+          { label: 'Greater than 75%', score: 100 }
+        ]
+      },
+      {
+        id: 'rec2',
+        text: 'What is the typical length of your customer contracts or service agreements?',
+        options: [
+          { label: 'No contracts — purely transactional', score: 0 },
+          { label: 'Less than 6 months', score: 25 },
+          { label: '6–12 months', score: 50 },
+          { label: '1–3 years', score: 75 },
+          { label: 'More than 3 years or evergreen auto-renewing contracts', score: 100 }
+        ]
+      },
+      {
+        id: 'rec3',
+        text: 'What is your approximate annual customer churn rate (% of customers lost each year)?',
+        options: [
+          { label: 'Greater than 30%', score: 0 },
+          { label: '20–30%', score: 25 },
+          { label: '10–20%', score: 50 },
+          { label: '5–10%', score: 75 },
+          { label: 'Less than 5%', score: 100 }
+        ]
+      },
+      {
+        id: 'rec4',
+        text: 'When a contract or engagement ends, do customers automatically renew or require active re-selling?',
+        options: [
+          { label: 'Always requires active re-selling from scratch', score: 0 },
+          { label: 'Usually requires significant effort to renew', score: 25 },
+          { label: 'Mixed — some renew, some require effort', score: 50 },
+          { label: 'Usually auto-renews with minimal effort', score: 75 },
+          { label: 'Always auto-renews — customers stay by default', score: 100 }
+        ]
+      },
+      {
+        id: 'rec5',
+        text: 'How predictable is your revenue for the next 12 months based on existing contracts or relationships?',
+        options: [
+          { label: 'Completely unpredictable — no visibility beyond this month', score: 0 },
+          { label: 'Hard to predict beyond a few months', score: 25 },
+          { label: 'Somewhat predictable — around 50% under contract', score: 50 },
+          { label: 'Fairly predictable — majority of revenue covered', score: 75 },
+          { label: 'Highly predictable — >80% of next year\'s revenue already contracted', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'monopoly', num: 6,
+    name: 'Monopoly Control',
+    avgKey: 'monopoly',
+    description: 'The more unique and difficult to replicate your business is, the more pricing power and buyer appeal you have. Patents, brand, exclusive contracts, and switching costs all build monopoly.',
+    improvements: [
+      'Identify and own a specific niche in your market',
+      'Register any available intellectual property (IP) to protect your uniqueness',
+      'Explore exclusive distribution rights or partnerships',
+      'Invest in building a strong, recognizable brand identity'
+    ],
+    questions: [
+      {
+        id: 'mon1',
+        text: 'How unique is your core product or service compared to alternatives in the market?',
+        options: [
+          { label: 'Commodity — identical to what competitors offer', score: 0 },
+          { label: 'Slightly differentiated but easily replicated', score: 25 },
+          { label: 'Moderately unique — some features competitors lack', score: 50 },
+          { label: 'Highly differentiated — clear competitive advantage', score: 75 },
+          { label: 'Truly unique — no direct substitute exists', score: 100 }
+        ]
+      },
+      {
+        id: 'mon2',
+        text: 'Do you hold any proprietary intellectual property (patents, trademarks, registered designs, trade secrets, proprietary software)?',
+        options: [
+          { label: 'None', score: 0 },
+          { label: 'Informal know-how only — nothing registered', score: 25 },
+          { label: 'Some trade secrets or unregistered IP', score: 50 },
+          { label: 'Registered trademarks, copyright, or significant IP', score: 75 },
+          { label: 'Strong IP portfolio including patents or proprietary technology', score: 100 }
+        ]
+      },
+      {
+        id: 'mon3',
+        text: 'How difficult would it be for a competitor to replicate what you do?',
+        options: [
+          { label: 'Very easy — anyone could start tomorrow', score: 0 },
+          { label: 'Fairly easy with modest investment', score: 25 },
+          { label: 'Moderate effort, time, and capital required', score: 50 },
+          { label: 'Very difficult — significant barriers to imitation', score: 75 },
+          { label: 'Practically impossible — protected by IP, relationships, or complexity', score: 100 }
+        ]
+      },
+      {
+        id: 'mon4',
+        text: 'Do you hold any exclusive contracts, licences, distribution rights, or preferred partner agreements?',
+        options: [
+          { label: 'None', score: 0 },
+          { label: 'Informal preferential terms only', score: 25 },
+          { label: 'Some exclusive or semi-exclusive arrangements', score: 50 },
+          { label: 'Significant exclusivities protecting our position', score: 75 },
+          { label: 'Dominant exclusive rights in our market', score: 100 }
+        ]
+      },
+      {
+        id: 'mon5',
+        text: 'How strong is your brand and reputation within your sector?',
+        options: [
+          { label: 'Unknown — we have no meaningful brand presence', score: 0 },
+          { label: 'Some awareness among existing customers', score: 25 },
+          { label: 'Moderate recognition in our local or niche market', score: 50 },
+          { label: 'Well known and respected in our sector', score: 75 },
+          { label: 'Market leader or premium brand with strong loyalty', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'customer', num: 7,
+    name: 'Customer Satisfaction',
+    avgKey: 'customer',
+    description: 'Satisfied customers buy more, refer others, and reduce sales costs. Buyers value businesses with demonstrably loyal customers because it lowers the risk of revenue erosion post-acquisition.',
+    improvements: [
+      'Implement regular customer satisfaction measurement (e.g., NPS surveys)',
+      'Identify and address issues with at-risk customer accounts',
+      'Create a formal customer success process to ensure ongoing satisfaction',
+      'Build a referral program to turn satisfied customers into advocates'
+    ],
+    questions: [
+      {
+        id: 'cus1',
+        text: 'Do you formally and regularly measure customer satisfaction (e.g., NPS surveys, post-project reviews, online ratings)?',
+        options: [
+          { label: 'No formal measurement at all', score: 0 },
+          { label: 'Occasional informal feedback only', score: 25 },
+          { label: 'Periodic surveys but not systematic', score: 50 },
+          { label: 'Regular NPS or satisfaction measurement', score: 75 },
+          { label: 'Systematic ongoing measurement with action plans', score: 100 }
+        ]
+      },
+      {
+        id: 'cus2',
+        text: 'What is your approximate Net Promoter Score (NPS) or equivalent customer satisfaction rating?',
+        options: [
+          { label: 'Negative NPS or no data', score: 0 },
+          { label: 'NPS 0–20 (average)', score: 25 },
+          { label: 'NPS 20–40 (good)', score: 50 },
+          { label: 'NPS 40–60 (very good)', score: 75 },
+          { label: 'NPS 60+ (excellent / world class)', score: 100 }
+        ]
+      },
+      {
+        id: 'cus3',
+        text: 'What percentage of your new business originates from referrals or word-of-mouth from existing customers?',
+        options: [
+          { label: 'Less than 10%', score: 0 },
+          { label: '10–20%', score: 25 },
+          { label: '20–35%', score: 50 },
+          { label: '35–50%', score: 75 },
+          { label: 'More than 50%', score: 100 }
+        ]
+      },
+      {
+        id: 'cus4',
+        text: 'What is your customer retention rate (% of customers who buy again year-on-year)?',
+        options: [
+          { label: 'Below 60%', score: 0 },
+          { label: '60–75%', score: 25 },
+          { label: '75–85%', score: 50 },
+          { label: '85–93%', score: 75 },
+          { label: 'Greater than 93%', score: 100 }
+        ]
+      },
+      {
+        id: 'cus5',
+        text: 'How proactively do you engage with customers after the initial sale (check-ins, reviews, added value)?',
+        options: [
+          { label: 'We never contact customers after the sale', score: 0 },
+          { label: 'Only when they contact us with a problem', score: 25 },
+          { label: 'Occasional touch-points (once or twice a year)', score: 50 },
+          { label: 'Regular proactive engagement (monthly/quarterly)', score: 75 },
+          { label: 'Continuous engagement — customers feel genuinely valued', score: 100 }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'hub', num: 8,
+    name: 'Hub & Spoke',
+    avgKey: 'hub',
+    description: 'If your business depends entirely on you, it\'s worth less. Buyers want a business that runs without the owner. Build a management team and delegate decision-making.',
+    improvements: [
+      'Start delegating key decisions to build a capable management team',
+      'Hire or develop a second-in-command to handle operations',
+      'Document all business processes and systems comprehensively',
+      'Test owner independence by taking extended absences from the business'
+    ],
+    questions: [
+      {
+        id: 'hub1',
+        text: 'How many days could you be absent from the business before a serious problem occurred?',
+        options: [
+          { label: 'Less than 1 week', score: 0 },
+          { label: '1–2 weeks', score: 25 },
+          { label: '2–4 weeks', score: 50 },
+          { label: '1–3 months', score: 75 },
+          { label: 'More than 3 months — the business runs without me', score: 100 }
+        ]
+      },
+      {
+        id: 'hub2',
+        text: 'Do you have a second-tier management team capable of running the business day-to-day?',
+        options: [
+          { label: 'No management team — it is just me', score: 0 },
+          { label: 'One capable individual but fragile', score: 25 },
+          { label: 'Small team but gaps in capability', score: 50 },
+          { label: 'Capable team covering most functions', score: 75 },
+          { label: 'Full senior leadership team — no single point of failure', score: 100 }
+        ]
+      },
+      {
+        id: 'hub3',
+        text: 'Are key business decisions made without requiring your personal approval?',
+        options: [
+          { label: 'I must approve all decisions — nothing happens without me', score: 0 },
+          { label: 'Most decisions need my approval', score: 25 },
+          { label: 'Routine decisions are delegated; strategic decisions need me', score: 50 },
+          { label: 'Most decisions fully delegated to the team', score: 75 },
+          { label: 'The team is fully empowered — I set direction only', score: 100 }
+        ]
+      },
+      {
+        id: 'hub4',
+        text: 'Are key customer relationships owned by employees or by you personally?',
+        options: [
+          { label: 'All key relationships are mine personally', score: 0 },
+          { label: 'Mostly mine — customers expect to deal with me', score: 25 },
+          { label: 'Mixed — some transferred, some still mine', score: 50 },
+          { label: 'Mostly in the hands of the team', score: 75 },
+          { label: 'Fully team-owned — customers have no expectation of dealing with me', score: 100 }
+        ]
+      },
+      {
+        id: 'hub5',
+        text: 'How well documented and transferable are your operational processes to a new owner or manager?',
+        options: [
+          { label: 'Nothing documented — it all lives in my head', score: 0 },
+          { label: 'Partially documented — major gaps', score: 25 },
+          { label: 'Key processes documented but incomplete', score: 50 },
+          { label: 'Well documented and could be followed by a capable newcomer', score: 75 },
+          { label: 'Fully documented, includes training materials, and regularly updated', score: 100 }
+        ]
+      }
+    ]
+  }
+];
+
+// ─── WIZARD STATE ─────────────────────────────────────────────────────────────
+
+const state = {
+  step: 0,
+  company: {},
+  answers: {},
+  financials: {},
+  industry: '',
+  scores: {}
+};
+
+// step 0 = welcome/company, 1-8 = drivers, 9 = financials, 10 = report
+const TOTAL_STEPS = 11;
+
+function stepName(i) {
+  if (i === 0) return 'Company';
+  if (i >= 1 && i <= 8) return DRIVERS[i-1].name.replace('The Valuation Teeter-Totter','Teeter-Totter').replace('Switzerland Structure','Switzerland').replace('Monopoly Control','Monopoly').replace('Customer Satisfaction','Satisfaction').replace('Hub & Spoke','Hub & Spoke');
+  if (i === 9) return 'Financials';
+  return 'Report';
+}
+
+// ─── PROGRESS BAR ─────────────────────────────────────────────────────────────
+
+function renderProgress() {
+  const wrap = document.getElementById('progressSteps');
+  wrap.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const reachable = i <= state.step;
+    const div = document.createElement('div');
+    div.className = 'step-pill' + (i === state.step ? ' active' : '') + (i < state.step ? ' done' : '') + (!reachable ? ' locked' : '');
+    div.title = reachable ? `Go to: ${stepName(i)}` : 'Complete previous steps to unlock';
+    div.innerHTML = `<span class="step-num">${i < state.step ? '&#10003;' : i + 1}</span>${stepName(i)}`;
+    if (reachable) div.onclick = () => { state.step = i; persistState(); render(); };
+    wrap.appendChild(div);
+  }
+}
+
+// ─── RENDER DISPATCH ──────────────────────────────────────────────────────────
+
+function render() {
+  renderProgress();
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  if (state.step === 0) renderWelcome(main);
+  else if (state.step >= 1 && state.step <= 8) renderDriver(main, state.step - 1);
+  else if (state.step === 9) renderFinancials(main);
+  else renderReport(main);
+  main.firstElementChild && main.firstElementChild.classList.add('fade-in');
+  window.scrollTo(0, 0);
+}
+
+// ─── STEP 0: WELCOME ──────────────────────────────────────────────────────────
+
+function renderWelcome(main) {
+  const c = state.company;
+  const pending = window._pendingRestore;
+  const restoreBanner = pending ? `
+    <div class="restore-banner">
+      <div class="rb-icon">&#128190;</div>
+      <div class="rb-text">
+        <strong>Saved progress found for ${pending.company?.name || 'a previous session'}</strong>
+        Last saved: ${pending.savedAt ? new Date(pending.savedAt).toLocaleString('en-GB') : 'unknown'}
+        — step ${pending.step} of ${TOTAL_STEPS - 1} completed.
+      </div>
+      <div class="rb-actions">
+        <button class="btn btn-primary" onclick="restoreSession()">Resume Where I Left Off</button>
+        <button class="btn btn-secondary" onclick="window._pendingRestore=null;render()">Start Fresh</button>
+      </div>
+    </div>` : '';
+
+  main.innerHTML = `
+    <div class="card">
+      ${restoreBanner}
+      <div class="welcome-hero">
+        <h1>Value Builder Assessment</h1>
+        <p>Discover the value of your business across 8 key drivers and receive a personalised report with an indicative Enterprise Value.</p>
+      </div>
+      <div class="welcome-grid" style="margin-bottom:28px">
+        ${DRIVERS.map(d => `<div class="driver-preview"><strong>${d.num}. ${d.name}</strong>${d.description.substring(0,80)}…</div>`).join('')}
+      </div>
+      <hr style="border:none;border-top:1px solid var(--grey-border);margin-bottom:24px">
+      <h3 style="margin-bottom:16px;color:var(--navy)">Company Details</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Company Name *</label>
+          <input type="text" id="co_name" value="${c.name||''}" placeholder="e.g. Acme Ltd">
+        </div>
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" id="co_contact" value="${c.contact||''}" placeholder="e.g. Jane Smith">
+        </div>
+        <div class="form-group">
+          <label>Your Role / Title</label>
+          <input type="text" id="co_role" value="${c.role||''}" placeholder="e.g. Managing Director">
+        </div>
+        <div class="form-group">
+          <label>Date of Assessment</label>
+          <input type="text" id="co_date" value="${c.date||new Date().toLocaleDateString('en-GB')}" placeholder="dd/mm/yyyy">
+        </div>
+        <div class="form-group">
+          <label>Number of Employees</label>
+          <select id="co_size">
+            ${['','1–5','6–15','16–50','51–100','101–250','251+'].map(v=>`<option value="${v}" ${c.size===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Years Trading</label>
+          <select id="co_years">
+            ${['','<1 year','1–3 years','3–5 years','5–10 years','10–20 years','20+ years'].map(v=>`<option value="${v}" ${c.years===v?'selected':''}>${v||'-- Select --'}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <p id="welcome_err" class="error-msg">Please enter the Company Name and Your Name to continue.</p>
+      <div class="nav-buttons">
+        <span class="required-note">* Required fields</span>
+        <button class="btn btn-primary btn-large" onclick="saveWelcome()">Start Assessment &rarr;</button>
+      </div>
+    </div>`;
+}
+
+function saveWelcome() {
+  const name = document.getElementById('co_name').value.trim();
+  const contact = document.getElementById('co_contact').value.trim();
+  if (!name || !contact) { document.getElementById('welcome_err').classList.add('show'); return; }
+  state.company = {
+    name, contact,
+    role: document.getElementById('co_role').value.trim(),
+    date: document.getElementById('co_date').value.trim(),
+    size: document.getElementById('co_size').value,
+    years: document.getElementById('co_years').value
+  };
+  state.step = 1;
+  persistState();
+  render();
+}
+
+// ─── STEPS 1-8: DRIVER QUESTIONS ─────────────────────────────────────────────
+
+function renderDriver(main, driverIdx) {
+  const d = DRIVERS[driverIdx];
+  const answers = state.answers[d.id] || {};
+  const progress = Object.keys(answers).length;
+  main.innerHTML = `
+    <div class="card">
+      <div class="driver-header">
+        <div class="driver-badge">${d.num}</div>
+        <div class="driver-title">
+          <h2>${d.name}</h2>
+          <p>${d.description}</p>
+        </div>
+      </div>
+      ${d.questions.map((q, qi) => `
+        <div class="question-block">
+          <div class="question-num">Question ${qi+1} of ${d.questions.length}</div>
+          <div class="question-text">${q.text}</div>
+          <div class="radio-group">
+            ${q.options.map(opt => {
+              const sel = answers[q.id] === opt.score;
+              return `<label class="radio-option${sel?' selected':''}">
+                <input type="radio" name="${q.id}" value="${opt.score}" ${sel?'checked':''} onchange="selectAnswer('${d.id}','${q.id}',${opt.score},this)">
+                <span class="radio-option-label">${opt.label}</span>
+              </label>`;
+            }).join('')}
+          </div>
+        </div>
+      `).join('')}
+      <p id="driver_err" class="error-msg">Please answer all questions before continuing.</p>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+        <button class="btn btn-primary" onclick="saveDriver(${driverIdx})">
+          ${driverIdx < 7 ? 'Next Driver →' : 'Financial Data →'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function selectAnswer(driverId, qId, score, el) {
+  if (!state.answers[driverId]) state.answers[driverId] = {};
+  state.answers[driverId][qId] = score;
+  // update visual selection
+  document.querySelectorAll(`[name="${qId}"]`).forEach(r => {
+    r.closest('.radio-option').classList.remove('selected');
+  });
+  el.closest('.radio-option').classList.add('selected');
+}
+
+function saveDriver(driverIdx) {
+  const d = DRIVERS[driverIdx];
+  const answers = state.answers[d.id] || {};
+  if (d.questions.some(q => answers[q.id] === undefined)) {
+    document.getElementById('driver_err').classList.add('show');
+    return;
+  }
+  state.step = driverIdx + 2;
+  persistState();
+  render();
+}
+
+// ─── STEP 9: FINANCIALS ───────────────────────────────────────────────────────
+
+function renderFinancials(main) {
+  const f = state.financials;
+  const v = (k) => f[k] !== undefined ? f[k] : '';
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="driver-header">
+        <div class="driver-badge" style="background:var(--orange)">£</div>
+        <div class="driver-title">
+          <h2>Financial Profile & Adjusted EBITDA</h2>
+          <p>Enter your most recent full-year P&amp;L figures below. We will calculate your Adjusted EBITDA and an indicative Enterprise Value based on your Value Builder Score. All figures in £.</p>
+        </div>
+      </div>
+
+      <div class="section-title">Profit & Loss — Revenue & Gross Profit</div>
+      <div class="fin-row"><label>Total Revenue / Turnover</label><span class="fin-sign">&nbsp;</span><input class="fin-input" type="number" id="f_revenue" value="${v('revenue')}" placeholder="0" min="0"></div>
+      <div class="fin-row"><label>Cost of Sales / Direct Costs</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_cogs" value="${v('cogs')}" placeholder="0" min="0"></div>
+      <div class="fin-subtotal"><span>Gross Profit</span><span id="disp_gp">£0</span></div>
+
+      <div class="section-title" style="margin-top:20px">Overheads & Operating Costs</div>
+      <div class="fin-row"><label>Staff Costs (excl. owner salary)</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_staff" value="${v('staff')}" placeholder="0" min="0"></div>
+      <div class="fin-row"><label>Premises / Rent</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_rent" value="${v('rent')}" placeholder="0" min="0"></div>
+      <div class="fin-row"><label>Marketing & Sales Costs</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_marketing" value="${v('marketing')}" placeholder="0" min="0"></div>
+      <div class="fin-row"><label>Other Operating Overheads</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_other_oh" value="${v('other_oh')}" placeholder="0" min="0"></div>
+      <div class="fin-row"><label>Depreciation & Amortisation</label><span class="fin-sign">(−)</span><input class="fin-input" type="number" id="f_da" value="${v('da')}" placeholder="0" min="0"></div>
+      <div class="fin-subtotal"><span>Reported EBITDA</span><span id="disp_ebitda">£0</span></div>
+
+      <div class="section-title" style="margin-top:24px">EBITDA Add-Backs</div>
+      <p style="font-size:0.875rem;color:var(--grey-text);margin-bottom:16px">Add back items that would not be present under new ownership. These increase your normalised / adjusted EBITDA.</p>
+
+      <div class="addback-item">
+        <strong style="font-size:0.875rem;color:#1a6b3a;display:block;margin-bottom:8px">Owner / Director Remuneration Adjustment</strong>
+        <div class="addback-row">
+          <div class="form-group" style="margin:0">
+            <label>Owner Salary / Drawings Included in P&amp;L</label>
+            <input type="number" id="f_owner_salary" value="${v('owner_salary')}" placeholder="0" min="0">
+            <div class="form-hint">Total paid to working owner(s) expensed through the business</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Market Rate Replacement Salary</label>
+            <input type="number" id="f_market_salary" value="${v('market_salary')}" placeholder="0" min="0">
+            <div class="form-hint">Estimated cost to replace owner with a hired manager</div>
+          </div>
+        </div>
+        <div class="fin-subtotal" style="margin-top:8px"><span>Owner Salary Add-Back (Owner Salary − Market Rate)</span><span id="disp_owner_ab">£0</span></div>
+      </div>
+
+      <div class="addback-item">
+        <strong style="font-size:0.875rem;color:#1a6b3a;display:block;margin-bottom:8px">Non-Recurring & One-Off Costs</strong>
+        <div class="addback-row">
+          <div class="form-group" style="margin:0">
+            <label>One-off Legal / Professional Fees</label>
+            <input type="number" id="f_legal" value="${v('legal')}" placeholder="0" min="0">
+            <div class="form-hint">e.g. litigation, restructuring costs not expected to recur</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Redundancy / Restructuring Costs</label>
+            <input type="number" id="f_redundancy" value="${v('redundancy')}" placeholder="0" min="0">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>One-off Marketing / Launch Spend</label>
+            <input type="number" id="f_oneoff_mkt" value="${v('oneoff_mkt')}" placeholder="0" min="0">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Other Non-Recurring Costs</label>
+            <input type="number" id="f_other_nr" value="${v('other_nr')}" placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="addback-item">
+        <strong style="font-size:0.875rem;color:#1a6b3a;display:block;margin-bottom:8px">One-Off Gains (to be removed from EBITDA)</strong>
+        <div class="addback-row">
+          <div class="form-group" style="margin:0">
+            <label>One-Off Asset Disposal Gain</label>
+            <input type="number" id="f_disposal" value="${v('disposal')}" placeholder="0" min="0">
+            <div class="form-hint">Will be deducted — non-recurring income is removed</div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Other One-Off Income</label>
+            <input type="number" id="f_oneoff_inc" value="${v('oneoff_inc')}" placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="addback-item">
+        <strong style="font-size:0.875rem;color:#1a6b3a;display:block;margin-bottom:8px">Rent Adjustment</strong>
+        <div class="addback-row">
+          <div class="form-group" style="margin:0">
+            <label>Rent Charged in P&amp;L</label>
+            <input type="number" id="f_rent_charged" value="${v('rent_charged')}" placeholder="0" min="0">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>Market Rent (Arms-Length Equivalent)</label>
+            <input type="number" id="f_rent_market" value="${v('rent_market')}" placeholder="0" min="0">
+            <div class="form-hint">If owner charges above/below market rent. Difference is added/deducted.</div>
+          </div>
+        </div>
+        <div class="fin-subtotal" style="margin-top:8px"><span>Rent Add-Back (Charged − Market)</span><span id="disp_rent_ab">£0</span></div>
+      </div>
+
+      <div class="fin-total" style="margin-top:16px">
+        <span>Adjusted EBITDA</span>
+        <span id="disp_adj_ebitda" style="font-size:1.3rem">£0</span>
+      </div>
+
+      <div class="section-title" style="margin-top:28px">Growth Assumptions</div>
+      <div class="form-group">
+        <label>Expected Annual EBITDA Growth Rate (%)</label>
+        <input type="number" id="f_growth_rate" value="${v('growth_rate')}" placeholder="0" min="0" max="50" step="0.1">
+        <div class="form-hint">The annual growth rate you expect for future EBITDA. Used for projections in the report.</div>
+      </div>
+
+      <div class="section-title" style="margin-top:28px">Industry Sector</div>
+      <div class="form-group">
+        <label>Which sector best describes your business? *</label>
+        <select id="f_industry" onchange="state.industry=this.value;calcFinancials()">
+          <option value="">-- Select your sector --</option>
+          ${Object.keys(INDUSTRY_MULTIPLES).map(k=>`<option value="${k}" ${state.industry===k?'selected':''}>${k}</option>`).join('')}
+        </select>
+        <div class="form-hint">This determines the EBITDA multiple range used to calculate Enterprise Value.</div>
+      </div>
+
+      <p id="fin_err" class="error-msg">Please select an industry sector before continuing.</p>
+      <div class="nav-buttons">
+        <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+        <button class="btn btn-primary btn-large" onclick="saveFinancials()">Generate Report →</button>
+      </div>
+    </div>`;
+
+  // attach live calc listeners
+  ['f_revenue','f_cogs','f_staff','f_rent','f_marketing','f_other_oh','f_da',
+   'f_owner_salary','f_market_salary','f_legal','f_redundancy','f_oneoff_mkt','f_other_nr',
+   'f_disposal','f_oneoff_inc','f_rent_charged','f_rent_market','f_growth_rate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcFinancials);
+  });
+  calcFinancials();
+}
+
+function getNum(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+
+function calcFinancials() {
+  const rev = getNum('f_revenue');
+  const cogs = getNum('f_cogs');
+  const gp = rev - cogs;
+  const staff = getNum('f_staff'), rent = getNum('f_rent'), mkt = getNum('f_marketing'),
+        other_oh = getNum('f_other_oh'), da = getNum('f_da');
+  const ebitda = gp - staff - rent - mkt - other_oh; // da already excluded from EBITDA
+  const ownerSal = getNum('f_owner_salary'), marketSal = getNum('f_market_salary');
+  const ownerAb = ownerSal - marketSal;
+  const legal = getNum('f_legal'), redundancy = getNum('f_redundancy'),
+        oneoffMkt = getNum('f_oneoff_mkt'), otherNr = getNum('f_other_nr');
+  const disposal = getNum('f_disposal'), oneoffInc = getNum('f_oneoff_inc');
+  const rentCharged = getNum('f_rent_charged'), rentMarket = getNum('f_rent_market');
+  const rentAb = rentCharged - rentMarket;
+  const adjEbitda = ebitda + ownerAb + legal + redundancy + oneoffMkt + otherNr - disposal - oneoffInc + rentAb;
+
+  const fmt = n => '£' + Math.round(n).toLocaleString('en-GB');
+  const setDisp = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = fmt(val); };
+  setDisp('disp_gp', gp);
+  setDisp('disp_ebitda', ebitda);
+  setDisp('disp_owner_ab', ownerAb);
+  setDisp('disp_rent_ab', rentAb);
+  setDisp('disp_adj_ebitda', adjEbitda);
+}
+
+function saveFinancials() {
+  if (!state.industry) { document.getElementById('fin_err').classList.add('show'); return; }
+  const f = {};
+  ['revenue','cogs','staff','rent','marketing','other_oh','da',
+   'owner_salary','market_salary','legal','redundancy','oneoff_mkt','other_nr',
+   'disposal','oneoff_inc','rent_charged','rent_market','growth_rate'].forEach(k => {
+    f[k] = parseFloat(document.getElementById('f_'+k)?.value) || 0;
+  });
+  state.financials = f;
+  computeScores();
+  state.step = 10;
+  persistState();
+  render();
+}
+
+// ─── SCORING ENGINE ────────────────────────────────────────────────────────────
+
+function computeScores() {
+  DRIVERS.forEach(d => {
+    const answers = state.answers[d.id] || {};
+    const vals = d.questions.map(q => answers[q.id] !== undefined ? answers[q.id] : 0);
+    state.scores[d.id] = Math.round(vals.reduce((a,b)=>a+b,0) / vals.length);
+  });
+  state.scores.overall = Math.round(DRIVERS.reduce((s,d)=>s+state.scores[d.id],0) / DRIVERS.length);
+}
+
+function getMultiple(vbs) {
+  // Interpolation: score → multiple range position
+  const mul = INDUSTRY_MULTIPLES[state.industry] || { min: 2, max: 5 };
+  // Map VBS 0-100 to mul.min-mul.max using slight S-curve via clamped linear
+  const t = Math.max(0, Math.min(100, vbs)) / 100;
+  return mul.min + (mul.max - mul.min) * t;
+}
+
+function getAdjEbitda() {
+  const f = state.financials;
+  const rev = f.revenue||0, cogs = f.cogs||0;
+  const gp = rev - cogs;
+  const ebitda = gp - (f.staff||0) - (f.rent||0) - (f.marketing||0) - (f.other_oh||0);
+  const ownerAb = (f.owner_salary||0) - (f.market_salary||0);
+  const rentAb = (f.rent_charged||0) - (f.rent_market||0);
+  return ebitda + ownerAb + (f.legal||0) + (f.redundancy||0) + (f.oneoff_mkt||0) + (f.other_nr||0)
+       - (f.disposal||0) - (f.oneoff_inc||0) + rentAb;
+}
+
+function getBand(score) {
+  return SCORE_BANDS.find(b => score >= b.min && score < b.max) || SCORE_BANDS[SCORE_BANDS.length-1];
+}
+
+// ─── REPORT ────────────────────────────────────────────────────────────────────
+
+function renderReport(main) {
+  const overall = state.scores.overall;
+  const adjEbitda = getAdjEbitda();
+  const multiple = getMultiple(overall);
+  const ev = adjEbitda * multiple;
+  const band = getBand(overall);
+  const fmt = n => '£' + Math.round(n).toLocaleString('en-GB');
+  const mulRange = INDUSTRY_MULTIPLES[state.industry] || { min: 2, max: 5 };
+
+  // Growth projections
+  const growthRate = state.financials.growth_rate || 0;
+  const scenarios = [
+    { label: 'Conservative (' + (growthRate * 0.5).toFixed(1) + '%)', rate: growthRate * 0.5 / 100 },
+    { label: 'Base (' + growthRate.toFixed(1) + '%)', rate: growthRate / 100 },
+    { label: 'Optimistic (' + (growthRate * 1.5).toFixed(1) + '%)', rate: growthRate * 1.5 / 100 }
+  ];
+  const projections = scenarios.map(s => {
+    const proj = [adjEbitda];
+    for (let y = 1; y <= 10; y++) {
+      proj.push(proj[y-1] * (1 + s.rate));
+    }
+    return { ...s, proj };
+  });
+  const discountRates = [0.10, 0.15]; // 10% and 15%
+  const dcfValues = projections.map(p => {
+    return discountRates.map(dr => {
+      let dcf = 0;
+      for (let y = 1; y <= 10; y++) {
+        dcf += p.proj[y] / Math.pow(1 + dr, y);
+      }
+      return dcf;
+    });
+  });
+
+  main.innerHTML = `
+    <div class="report-header">
+      <h1>Value Builder Score Report</h1>
+      <div class="company-name">${state.company.name}</div>
+      <div class="report-meta">
+        <div class="report-meta-item">Prepared for<span>${state.company.contact}${state.company.role ? ', '+state.company.role : ''}</span></div>
+        <div class="report-meta-item">Date<span>${state.company.date}</span></div>
+        <div class="report-meta-item">Industry<span>${state.industry}</span></div>
+        ${state.company.size ? `<div class="report-meta-item">Employees<span>${state.company.size}</span></div>` : ''}
+        ${state.company.years ? `<div class="report-meta-item">Years Trading<span>${state.company.years}</span></div>` : ''}
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h2 style="font-size:1.2rem">Your Overall Value Builder Score</h2>
+        <button class="btn btn-print" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+      <div class="overall-score-card">
+        <div class="overall-gauge-wrap">
+          <canvas id="gaugeOverall" width="260" height="160"></canvas>
+        </div>
+        <div class="overall-score-details">
+          <div class="score-big">${overall}</div>
+          <div class="score-label">out of 100</div>
+          <div class="score-band ${band.cls}" style="margin-top:8px">${band.label}</div>
+          <p style="margin-top:16px;font-size:0.875rem;color:var(--grey-text);line-height:1.6">
+            Industry average: <strong>${INDUSTRY_AVERAGES.overall}</strong>/100.
+            You are <strong>${overall >= INDUSTRY_AVERAGES.overall ? overall - INDUSTRY_AVERAGES.overall + ' points above' : INDUSTRY_AVERAGES.overall - overall + ' points below'}</strong> the benchmark.
+          </p>
+          <p style="margin-top:8px;font-size:0.875rem;color:var(--grey-text)">
+            ${getOverallComment(overall)}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:20px">Driver Scores at a Glance</h2>
+      <div class="drivers-grid" id="driverGaugesGrid"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">Detailed Score Breakdown</h2>
+      <table class="score-table">
+        <thead><tr>
+          <th>Driver</th>
+          <th style="width:80px;text-align:center">Score</th>
+          <th style="width:80px;text-align:center">Average</th>
+          <th>Visual</th>
+          <th style="width:100px">vs Average</th>
+        </tr></thead>
+        <tbody>
+          ${DRIVERS.map(d => {
+            const s = state.scores[d.id];
+            const avg = INDUSTRY_AVERAGES[d.avgKey];
+            const diff = s - avg;
+            const barColor = s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--red)';
+            return `<tr>
+              <td><strong>${d.name}</strong></td>
+              <td style="text-align:center;font-weight:700">${s}</td>
+              <td style="text-align:center;color:var(--grey-text)">${avg}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="score-bar-wrap">
+                    <div class="score-bar" style="width:${s}%;background:${barColor}"></div>
+                  </div>
+                  <span style="font-size:0.78rem;color:var(--grey-text)">${s}/100</span>
+                </div>
+              </td>
+              <td><span class="${diff >= 0 ? 'tag-above' : 'tag-below'}">${diff >= 0 ? '+' : ''}${diff}</span></td>
+            </tr>`;
+          }).join('')}
+          <tr style="background:var(--navy)">
+            <td style="color:white;font-weight:700">Overall Value Builder Score</td>
+            <td style="text-align:center;font-weight:800;color:var(--orange-light)">${overall}</td>
+            <td style="text-align:center;color:#a0aec0">${INDUSTRY_AVERAGES.overall}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="score-bar-wrap" style="background:rgba(255,255,255,0.2)">
+                  <div class="score-bar" style="width:${overall}%;background:var(--orange)"></div>
+                </div>
+              </div>
+            </td>
+            <td><span style="font-weight:700;color:${overall>=INDUSTRY_AVERAGES.overall?'#6ee7b7':'#fca5a5'}">${overall>=INDUSTRY_AVERAGES.overall?'+':''}${overall-INDUSTRY_AVERAGES.overall}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">Future Profit Projections and Discounted Cash Flow Analysis</h2>
+      <p style="font-size:0.9rem;color:var(--grey-text);line-height:1.6;margin-bottom:20px">
+        Buyers pay for future earnings potential, not just historical performance. Growth rates reflect the expected increase in profitability over time. We project your Adjusted EBITDA forward using three scenarios: a conservative growth rate (half your input), your base growth rate, and an optimistic rate (1.5 times your input).
+      </p>
+      <div style="margin-bottom:20px">
+        <h3 style="font-size:1rem;margin-bottom:12px">EBITDA Projections (10-Year Horizon)</h3>
+        <table class="score-table" style="margin-bottom:20px">
+          <thead><tr><th>Year</th>${projections.map(p => `<th>${p.label}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${Array.from({length:11}, (_, i) => `<tr><td>${i === 0 ? 'Current' : 'Year ' + i}</td>${projections.map(p => `<td>${fmt(p.proj[i])}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+        <canvas id="growthChart" width="800" height="400"></canvas>
+      </div>
+      <p style="font-size:0.9rem;color:var(--grey-text);line-height:1.6;margin-bottom:20px">
+        Discount rates reflect the buyer's assessment of risk. Higher risk businesses require higher discount rates to account for uncertainty. Typical discount rates for ${state.industry.split('/')[0].trim()} businesses range from 10% to 15%, depending on risk factors.
+      </p>
+      <div>
+        <h3 style="font-size:1rem;margin-bottom:12px">Discounted Cash Flow Valuation</h3>
+        <table class="score-table">
+          <thead><tr><th>Scenario</th><th>10% Discount Rate</th><th>15% Discount Rate</th></tr></thead>
+          <tbody>
+            ${projections.map((p, i) => `<tr><td>${p.label}</td><td>${fmt(dcfValues[i][0])}</td><td>${fmt(dcfValues[i][1])}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="valuation-card">
+        <h2>Indicative Valuation</h2>
+        <div class="valuation-grid">
+          <div class="val-item">
+            <div class="val-label">Adjusted EBITDA</div>
+            <div class="val-num" style="font-size:1.3rem">${fmt(adjEbitda)}</div>
+            <div class="val-sub">Normalised earnings</div>
+          </div>
+          <div class="val-item">
+            <div class="val-label">Sector Multiple Range</div>
+            <div class="val-num">${mulRange.min.toFixed(1)}x – ${mulRange.max.toFixed(1)}x</div>
+            <div class="val-sub">${state.industry.split('/')[0].trim()}</div>
+          </div>
+          <div class="val-item">
+            <div class="val-label">Applied Multiple (VBS-adjusted)</div>
+            <div class="val-num">${multiple.toFixed(2)}x</div>
+            <div class="val-sub">Score ${overall}/100 → position in range</div>
+          </div>
+          <div class="val-item" style="background:rgba(255,255,255,0.22)">
+            <div class="val-label">Indicative Enterprise Value</div>
+            <div class="val-num">${fmt(ev)}</div>
+            <div class="val-sub">EBITDA × Multiple</div>
+          </div>
+        </div>
+        <p style="margin-top:16px;font-size:0.78rem;opacity:0.7">
+          This is an indicative estimate only. Actual transaction value depends on deal structure, buyer appetite, debt levels, working capital, and formal due diligence. The multiple applied reflects your Value Builder Score relative to the sector range. Improving your score will move the multiple upwards.
+        </p>
+      </div>
+    </div>
+
+    ${DRIVERS.map(d => `
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">${d.num}. ${d.name}</h2>
+      <p style="font-size:0.9rem;color:var(--grey-text);line-height:1.6;margin-bottom:16px">${d.description}</p>
+      <p style="font-size:0.9rem;margin-bottom:16px"><strong>Your Score:</strong> ${state.scores[d.id]}/100 <span style="color:var(--grey-text)"> (Industry Average: ${INDUSTRY_AVERAGES[d.avgKey]}/100)</span></p>
+      <p style="font-size:0.9rem;font-weight:600;margin-bottom:8px">Ways to Improve:</p>
+      <ul style="font-size:0.9rem;color:var(--grey-text);line-height:1.6">
+        ${d.improvements.map(imp => `<li>${imp}</li>`).join('')}
+      </ul>
+    </div>
+    `).join('')}
+
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">Priority Areas to Improve Value</h2>
+      <div class="recommendations" id="recsContainer"></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">Next Steps</h2>
+      <p style="font-size:0.9rem;color:var(--grey-text);line-height:1.8">
+        Your Value Builder Score provides a clear picture of where your business stands today.
+        The drivers scoring below 50 represent the greatest opportunity to increase enterprise value.
+        Even a 10-point improvement in your overall score can materially increase the applicable EBITDA multiple.
+      </p>
+      <div style="margin-top:16px;padding:16px;background:var(--grey-bg);border-radius:8px;font-size:0.9rem">
+        <strong>Speare Consulting</strong> works with business owners to systematically build value across all 8 drivers.
+        To discuss a tailored Value Builder programme, contact your Business Doctors adviser.
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:16px 0;font-size:0.78rem;color:var(--grey-text)">
+      Value Builder Assessment | Speare Consulting | Assessment date: ${state.company.date} | Confidential
+    </div>`;
+
+  // Growth chart
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array.from({length:11}, (_, i) => i === 0 ? 'Current' : 'Year ' + i),
+      datasets: projections.map((p, i) => ({
+        label: p.label,
+        data: p.proj,
+        borderColor: ['#e8813a', '#27ae60', '#f39c12'][i],
+        backgroundColor: 'transparent',
+        tension: 0.1
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: function(value) {
+              return '£' + (value / 1000).toFixed(0) + 'k';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Build driver gauge grid
+  const grid = document.getElementById('driverGaugesGrid');
+  DRIVERS.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'driver-score-card';
+    const score = state.scores[d.id];
+    const avg = INDUSTRY_AVERAGES[d.avgKey];
+    const b = getBand(score);
+    div.innerHTML = `
+      <h3>${d.num}. ${d.name}</h3>
+      <div class="driver-gauge-wrap"><canvas id="gauge_${d.id}" width="340" height="130"></canvas></div>
+      <div class="driver-score-num">${score} <span class="score-band ${b.cls}" style="font-size:0.7rem;padding:2px 8px">${b.label}</span></div>
+      <div class="driver-avg-label">Industry Average: ${avg}</div>`;
+    grid.appendChild(div);
+  });
+
+  // Build recommendations
+  const recs = document.getElementById('recsContainer');
+  const sorted = [...DRIVERS].sort((a,b) => state.scores[a.id] - state.scores[b.id]);
+  sorted.slice(0, 5).forEach(d => {
+    const s = state.scores[d.id];
+    const avg = INDUSTRY_AVERAGES[d.avgKey];
+    const rec = document.createElement('div');
+    rec.className = 'rec-item';
+    rec.innerHTML = `<div class="rec-driver">${d.num}. ${d.name} — Score: ${s}/100 (Average: ${avg})</div>
+      <div class="rec-text">${getRecommendation(d.id, s)}</div>`;
+    recs.appendChild(rec);
+  });
+
+  // Draw gauges after DOM is ready
+  requestAnimationFrame(() => {
+    drawGauge('gaugeOverall', overall, INDUSTRY_AVERAGES.overall, true);
+    DRIVERS.forEach(d => drawGauge('gauge_'+d.id, state.scores[d.id], INDUSTRY_AVERAGES[d.avgKey], false));
+  });
+}
+
+// ─── GAUGE CHART ─────────────────────────────────────────────────────────────
+
+function drawGauge(canvasId, score, avgScore, large) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = large ? h - 20 : h - 12;
+  const r = large ? Math.min(cx - 20, cy - 10) : Math.min(cx - 16, cy - 8);
+  const thickness = large ? 22 : 16;
+  const startAngle = Math.PI; // left
+  const endAngle = 2 * Math.PI; // right (0 degrees = right, but we use 180-360)
+
+  // Background arc segments: red, amber, green
+  const segments = [
+    { from: 0,   to: 40,  color: '#f8d7da' },
+    { from: 40,  to: 70,  color: '#fff3cd' },
+    { from: 70,  to: 100, color: '#d4edda' }
+  ];
+
+  // Draw track
+  segments.forEach(seg => {
+    const sa = Math.PI + (seg.from / 100) * Math.PI;
+    const ea = Math.PI + (seg.to   / 100) * Math.PI;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, sa, ea);
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = seg.color;
+    ctx.lineCap = 'butt';
+    ctx.stroke();
+  });
+
+  // Draw outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, 2*Math.PI);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#dde2ec';
+  ctx.stroke();
+
+  // Filled score arc
+  const scoreColors = [
+    { upto: 40, color: '#c0392b' },
+    { upto: 70, color: '#f39c12' },
+    { upto: 101, color: '#27ae60' }
+  ];
+  let filled = scoreColors.find(c => score <= c.upto) || scoreColors[2];
+  const scoreAngle = Math.PI + (score / 100) * Math.PI;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, Math.PI, scoreAngle);
+  ctx.lineWidth = thickness;
+  ctx.strokeStyle = filled.color;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Industry average tick
+  if (avgScore > 0) {
+    const avgAngle = Math.PI + (avgScore / 100) * Math.PI;
+    const tickOuter = r + thickness / 2 + 4;
+    const tickInner = r - thickness / 2 - 4;
+    ctx.beginPath();
+    ctx.moveTo(cx + tickInner * Math.cos(avgAngle), cy + tickInner * Math.sin(avgAngle));
+    ctx.lineTo(cx + tickOuter * Math.cos(avgAngle), cy + tickOuter * Math.sin(avgAngle));
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#1a2744';
+    ctx.stroke();
+    // avg label
+    const lblR = r + thickness / 2 + 14;
+    ctx.font = `${large?11:9}px Segoe UI`;
+    ctx.fillStyle = '#1a2744';
+    ctx.textAlign = 'center';
+    ctx.fillText('avg', cx + lblR * Math.cos(avgAngle), cy + lblR * Math.sin(avgAngle));
+  }
+
+  // Score labels at edges
+  ctx.font = `${large ? 11 : 9}px Segoe UI`;
+  ctx.fillStyle = '#9ca3af';
+  ctx.textAlign = 'center';
+  ctx.fillText('0', cx - r - 8, cy + 4);
+  ctx.fillText('100', cx + r + 8, cy + 4);
+  if (large) {
+    ctx.fillText('50', cx, cy - r - 10);
+  }
+
+  // Centre score text
+  ctx.font = `bold ${large ? 36 : 0}px Segoe UI`;
+  if (large) {
+    ctx.fillStyle = '#1a2744';
+    ctx.textAlign = 'center';
+    ctx.fillText(score, cx, cy - 10);
+  }
+}
+
+// ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
+
+function getRecommendation(id, score) {
+  const recs = {
+    financial: [
+      [0,  'Your financial performance needs significant attention. Focus on reducing costs, improving margins, and establishing clear monthly management accounts to understand profitability by product/service line.'],
+      [40, 'Your financial performance is developing. Work on improving consistency, building a 3-year financial model, and benchmarking margins against sector peers to identify improvement levers.'],
+      [70, 'Strong financial performance. Consider documenting your financial story for a potential buyer — clean, audited accounts and a forward-looking financial model will increase buyer confidence.']
+    ],
+    growth: [
+      [0,  'Growth potential is limited. Map your total addressable market, create a written growth strategy with milestones, and identify 2–3 specific growth initiatives with dedicated resource.'],
+      [40, 'Moderate growth potential. Formalise your growth strategy, strengthen your sales and marketing infrastructure, and build evidence of your scalability for a buyer audience.'],
+      [70, 'Good growth potential. Ensure your growth story is backed by credible data and a documented strategy. Consider how to reduce revenue concentration and open new markets.']
+    ],
+    switzerland: [
+      [0,  'High concentration risk. Actively reduce reliance on your top customer (target <15%), diversify your supplier base, and cross-train staff to remove single-employee dependency.'],
+      [40, 'Some concentration risk remains. Set a 12-month target to reduce your largest customer below 20% and document supplier alternatives to demonstrate resilience to buyers.'],
+      [70, 'Good diversification. Maintain your diversified structure and document the evidence — buyers will want to see customer revenue split and supplier alternatives.']
+    ],
+    teeter: [
+      [0,  'You are in a weak negotiating position. Eliminate personal urgency to sell before going to market, systematically document all processes, and build a team that runs without you.'],
+      [40, 'Your negotiating position is developing. Focus on documenting processes, building management capability, and ensuring cash flow is visibly independent of your involvement.'],
+      [70, 'Good balance. Ensure potential buyers can see your documented systems and your management team\'s capability without you needing to be present.']
+    ],
+    recurring: [
+      [0,  'Almost no recurring revenue — high risk for buyers. Convert project-based relationships to retainers or service contracts. Even 20% recurring revenue dramatically improves value.'],
+      [40, 'Some recurring revenue. Systematically convert your top clients to annual contracts, introduce auto-renewal clauses, and track churn as a KPI on your management dashboard.'],
+      [70, 'Good recurring revenue base. Focus on reducing churn further and extending average contract length to maximise the predictability premium buyers will pay.']
+    ],
+    monopoly: [
+      [0,  'You operate in a commodity market. Identify a niche to own, register any available IP, explore exclusive distribution rights, and invest in building a recognisable brand.'],
+      [40, 'Some differentiation but not yet defensible. Formalise and protect your IP, seek exclusive arrangements where possible, and invest in building your brand story.'],
+      [70, 'Strong differentiation. Document your IP portfolio, exclusive arrangements, and competitive moat clearly — this is a significant value premium to communicate to buyers.']
+    ],
+    customer: [
+      [0,  'Customer satisfaction is unmeasured and likely at risk. Implement NPS measurement immediately, identify your at-risk accounts, and create a formal customer success process.'],
+      [40, 'Customer satisfaction is developing. Formalise your measurement approach, set an NPS target, and build a referral programme to turn satisfied customers into advocates.'],
+      [70, 'Strong customer satisfaction. Ensure your NPS data is documented and trending upwards — this evidence of loyalty significantly reduces perceived risk for buyers.']
+    ],
+    hub: [
+      [0,  'The business is entirely dependent on you — a major value killer. Start delegating decisions immediately, hire or develop a second-in-command, and begin documenting all processes.'],
+      [40, 'Some owner independence but fragile. Define clear decision rights, invest in your management team, and test absence periods to build buyer confidence in independent operation.'],
+      [70, 'Good owner independence. Consider a formal "owner away" test — operate for 2+ months with minimal involvement and document the result to demonstrate independence to buyers.']
+    ]
+  };
+  const arr = recs[id] || [];
+  const found = arr.slice().reverse().find(r => score >= r[0]);
+  return found ? found[1] : arr[0][1];
+}
+
+function getOverallComment(score) {
+  if (score < 30) return 'Your business has significant value-building work ahead. The good news: every point gained represents meaningful improvement in enterprise value.';
+  if (score < 50) return 'Your business is in the "building value" zone. Focus on the lowest-scoring drivers first — targeted improvements can quickly move you into a higher valuation bracket.';
+  if (score < 70) return 'Your business is performing near the industry average. Strategic focus on 2–3 key drivers could move you into the premium value tier.';
+  return 'Your business is a strong Value Builder. Maintaining and documenting your strengths will help you command a premium when the time is right.';
+}
+
+// ─── NAVIGATION ────────────────────────────────────────────────────────────────
+
+function goBack() {
+  if (state.step > 0) { state.step--; persistState(); render(); }
+}
+
+function restoreSession() {
+  const snap = window._pendingRestore;
+  if (!snap) return;
+  applySnapshot(snap);
+  window._pendingRestore = null;
+  updateSaveStatus(snap.savedAt);
+  render();
+}
+
+// ─── SAVE / LOAD ───────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'vba_progress_v1';
+
+function persistState() {
+  try {
+    const snapshot = {
+      step: state.step,
+      company: state.company,
+      answers: state.answers,
+      financials: state.financials,
+      industry: state.industry,
+      scores: state.scores,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    updateSaveStatus(snapshot.savedAt);
+  } catch(e) { /* storage unavailable */ }
+}
+
+function updateSaveStatus(isoDate) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  if (!isoDate) { el.textContent = 'Not saved yet'; return; }
+  const d = new Date(isoDate);
+  el.textContent = 'Auto-saved ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) + ' on ' + d.toLocaleDateString('en-GB');
+}
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function applySnapshot(snap) {
+  state.step       = snap.step       || 0;
+  state.company    = snap.company    || {};
+  state.answers    = snap.answers    || {};
+  state.financials = snap.financials || {};
+  state.industry   = snap.industry   || '';
+  state.scores     = snap.scores     || {};
+}
+
+function clearSaved() {
+  if (!confirm('Clear all saved progress and start fresh?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  Object.assign(state, { step:0, company:{}, answers:{}, financials:{}, industry:'', scores:{} });
+  updateSaveStatus(null);
+  render();
+}
+
+function exportToFile() {
+  try {
+    const snap = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    snap.exportedAt = new Date().toISOString();
+    const blob = new Blob([JSON.stringify(snap, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const company = (state.company.name || 'assessment').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    a.download = `vba_${company}_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(e) { alert('Could not export: ' + e.message); }
+}
+
+function importFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const snap = JSON.parse(e.target.result);
+      if (!snap.company && !snap.answers) throw new Error('File does not appear to be a valid assessment file.');
+      applySnapshot(snap);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snap));
+      updateSaveStatus(snap.savedAt || snap.exportedAt || new Date().toISOString());
+      render();
+    } catch(err) {
+      alert('Could not load file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // allow re-loading same file
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+
+const _savedSnap = loadPersistedState();
+if (_savedSnap && _savedSnap.step > 0) {
+  // Don't auto-apply yet — welcome screen will show a restore banner
+  window._pendingRestore = _savedSnap;
+  updateSaveStatus(_savedSnap.savedAt);
+}
+render();
+</script>
+</body>
+</html>
